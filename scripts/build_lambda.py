@@ -25,7 +25,7 @@ def build(src_dir):
                  '--target', build_dir,
                  '-r', os.path.join(build_dir, 'requirements.txt')],
                  check=True,
-                 capture_output=True
+                 stdout=subprocess.DEVNULL,
             )
         artifact=tempfile.NamedTemporaryFile(delete=False)
         make_archive(build_dir, artifact)
