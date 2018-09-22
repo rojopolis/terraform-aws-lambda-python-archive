@@ -12,10 +12,12 @@ or .pyc files in the archive so the hash is stable unless the source or dependen
 change. 
 
 ## Example
+
 ```
 module "python_lambda_archive" {
     source = "rojopolis/lambda-python-archive/aws"
     src_dir = "${path.module}/python"
+    output_path = "${path.module}/lambda.zip"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {

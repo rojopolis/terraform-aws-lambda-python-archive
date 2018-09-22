@@ -1,6 +1,7 @@
 module "python_lambda_archive" {
-    source = "../"
-    src_dir = "${path.module}/python"
+    source      = "../"
+    src_dir     = "${path.module}/python"
+    output_path = "${path.module}/artifacts/lambda.zip"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
