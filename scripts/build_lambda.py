@@ -49,6 +49,7 @@ def make_archive(src_dir, output_path):
                 metadata = zipfile.ZipInfo(
                     os.path.join(root, file).replace(src_dir, '').lstrip(os.sep)
                 )
+                metadata.external_attr = 0o755 << 16
                 with open(os.path.join(root, file), 'rb') as f:
                     data = f.read()
                 archive.writestr(
