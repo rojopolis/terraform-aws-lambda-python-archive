@@ -16,8 +16,10 @@ change.
 ```
 module "python_lambda_archive" {
     source = "rojopolis/lambda-python-archive/aws"
-    src_dir = "${path.module}/python"
-    output_path = "${path.module}/lambda.zip"
+
+    src_dir              = "${path.module}/python"
+    output_path          = "${path.module}/lambda.zip"
+    install_dependencies = false
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
