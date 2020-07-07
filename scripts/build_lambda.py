@@ -72,4 +72,4 @@ if __name__ == '__main__':
     query = json.loads(sys.stdin.read())
     logging.debug(query)
     archive = build(query['src_dir'], query['output_path'])
-    print(json.dumps({'archive': archive, "base64sha256":get_hash(archive)}))
+    print(json.dumps({'archive': archive, 'base64sha256':get_hash(archive)}))
