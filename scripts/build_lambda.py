@@ -13,7 +13,7 @@ import sys
 import tempfile
 import zipfile
 
-def build(src_dir, output_path):
+def build(src_dir, output_path, install_dependencies):
     with tempfile.TemporaryDirectory() as build_dir:
         copy_tree(src_dir, build_dir)
         if os.path.exists(os.path.join(src_dir, 'requirements.txt')):
@@ -24,7 +24,8 @@ def build(src_dir, output_path):
                  'install',
                  '--ignore-installed',
                  '--target', build_dir,
-                 '-r', os.path.join(build_dir, 'requirements.txt')],
+                 '-r', os.path.join(build_dir, 'requirements.txt'),
+                 *(['--no-deps'] if install_dependencies == 'false' else [])],
                  check=True,
                  stdout=subprocess.DEVNULL,
             )
@@ -71,5 +72,5 @@ if __name__ == '__main__':
     logging.basicConfig(level='DEBUG')
     query = json.loads(sys.stdin.read())
     logging.debug(query)
-    archive = build(query['src_dir'], query['output_path'])
-    print(json.dumps({'archive': archive, "base64sha256":get_hash(archive)}))
+    archive = build(query['src_dir'], query['output_path'], query['install_dependencies'])
+    print(json.dumps({'archive': archive, 'base64sha256':get_hash(archive)}))
