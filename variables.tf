@@ -9,7 +9,13 @@ variable "output_path" {
 }
 
 variable "install_dependencies" {
-    description = "Whether to install pip dependecies"
+    description = "Whether to install pip dependecies."
     type        = bool
     default     = true
+}
+
+variable "exclude_files" {
+    description = "List of filenames (relative to Lambda's root) to exclude from archive."
+    type        = list
+    default     = []
 }

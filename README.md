@@ -5,11 +5,12 @@ See: https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-de
 
 I created this module because using the standard technique of using an
  `archive_file` data source has a few shortcomings:
-1. This doesn't allow processing a requirements file.
+1. It doesn't allow processing a requirements file.
 2. Each apply results in a diff in `source_code_hash` becuase the archive includes
 metadata and generated files (*.pyc).  This module doesn't include file metadata
 or .pyc files in the archive so the hash is stable unless the source or dependencies
 change. 
+3. There is no mechanism to exclude files from the archive.
 
 ## Example
 
@@ -20,6 +21,14 @@ module "python_lambda_archive" {
     src_dir              = "${path.module}/python"
     output_path          = "${path.module}/lambda.zip"
     install_dependencies = false
+    exclude_files        = [
+        '.gitignore',
+        # Any other file(s) you don't want included
+        # I use pipenv for local development, but prefer requirements.txt for deployments
+        'Pipfile',
+        'Pipfile.lock',
+        '.env'
+    ]
 }
 
 resource "aws_iam_role" "iam_for_lambda" {

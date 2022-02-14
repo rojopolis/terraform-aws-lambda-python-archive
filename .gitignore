@@ -13,3 +13,5 @@
 
 # OSX Garbage
 .DS_Store
+
+example_output/*

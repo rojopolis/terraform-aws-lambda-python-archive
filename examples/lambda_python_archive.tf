@@ -1,7 +1,21 @@
 module "python_lambda_archive" {
-    source      = "../"
-    src_dir     = "${path.module}/python"
-    output_path = "${path.module}/artifacts/lambda.zip"
+    # Original version:
+    # source = "rojopolis/lambda-python-archive/aws"
+    # Updates past v0.1.6:
+    source = "github.com/farfromunique/terraform-aws-lambda-python-archive.git?ref=0.1.8"
+
+    src_dir              = "${path.module}/python"
+    output_path          = "${path.module}/lambda.zip"
+    install_dependencies = false
+    # Requires v0.1.8 or more.
+    exclude_files        = [
+        '.gitignore',
+        # Any other file(s) you don't want included
+        # I use pipenv for local development, but prefer requirements.txt for deployments
+        'Pipfile',
+        'Pipfile.lock',
+        '.env'
+    ]
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
