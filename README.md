@@ -60,3 +60,85 @@ resource "aws_lambda_function" "test_lambda" {
 
 ## External Dependencies
 1. Python3.4+
+
+## Example layer
+This module can also build a layer which requires all files to go into the `python`
+directory instead of the base directory in the ZIP archive.
+
+One use of layers is to have a common set of dependencies between multiple Lambda
+packages while keeping the archive for each package small.
+
+```
+module "python_lambda_archive_layer" {
+    source = "rojopolis/lambda-python-archive/aws"
+
+    src_dir              = "${path.module}/python-base-layer"
+    output_path          = "${path.module}/lambda-base-layer.zip"
+    install_dependencies = true
+    is_layer             = true
+}
+
+module "python_lambda_archive_package1" {
+    source = "rojopolis/lambda-python-archive/aws"
+
+    src_dir              = "${path.module}/python1"
+    output_path          = "${path.module}/lambda1.zip"
+    install_dependencies = false
+}
+
+module "python_lambda_archive_package2" {
+    source = "rojopolis/lambda-python-archive/aws"
+
+    src_dir              = "${path.module}/python2"
+    output_path          = "${path.module}/lambda2.zip"
+    install_dependencies = false
+}
+
+resource "aws_lambda_layer_version" "base_layer" {
+    filename         = "${module.python_lambda_archive_layer.archive_path}"
+    layer_name       = "base_layer"
+    source_code_hash = "${module.python_lambda_archive_layer.source_code_hash}"
+    runtime          = "python3.6"
+}
+
+resource "aws_lambda_function" "lambda1" {
+    filename         = "${module.python_lambda_archive_package1.archive_path}"
+    function_name    = "lambda_function_name1"
+    role             = "${aws_iam_role.iam_for_lambda.arn}"
+    handler          = "exports.test"
+    source_code_hash = "${module.python_lambda_archive_package1.source_code_hash}"
+    runtime          = "python3.6"
+    layers           = ["${aws_lambda_layer_version.base_layer.arn}"]
+}
+
+resource "aws_lambda_function" "lambda2" {
+    filename         = "${module.python_lambda_archive_package2.archive_path}"
+    function_name    = "lambda_function_name2"
+    role             = "${aws_iam_role.iam_for_lambda.arn}"
+    handler          = "exports.test"
+    source_code_hash = "${module.python_lambda_archive_package2.source_code_hash}"
+    runtime          = "python3.6"
+    layers           = ["${aws_lambda_layer_version.base_layer.arn}"]
+}
+
+resource "aws_iam_role" "iam_for_lambda" {
+    name = "iam_for_lambda"
+
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+```

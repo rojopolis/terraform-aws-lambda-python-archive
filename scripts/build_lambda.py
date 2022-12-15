@@ -13,7 +13,7 @@ import sys
 import tempfile
 import zipfile
 
-def build(src_dir, output_path, install_dependencies):
+def build(src_dir, output_path, install_dependencies, is_layer):
     with tempfile.TemporaryDirectory() as build_dir:
         copy_tree(src_dir, build_dir)
         if os.path.exists(os.path.join(src_dir, 'requirements.txt')):
@@ -25,15 +25,15 @@ def build(src_dir, output_path, install_dependencies):
                  '--ignore-installed',
                  '--target', build_dir,
                  '-r', os.path.join(build_dir, 'requirements.txt'),
-                 *(['--no-deps'] if install_dependencies == 'false' else [])],
+                 *([] if install_dependencies else ['--no-deps'])],
                  check=True,
                  stdout=subprocess.DEVNULL,
             )
-        make_archive(build_dir, output_path)
+        make_archive(build_dir, output_path, is_layer)
         return output_path
 
 
-def make_archive(src_dir, output_path):
+def make_archive(src_dir, output_path, is_layer):
     try:
         os.makedirs(os.path.dirname(output_path))
     except OSError as e:
@@ -42,20 +42,25 @@ def make_archive(src_dir, output_path):
         else:
             raise
 
-    with zipfile.ZipFile(output_path, 'w') as archive:
-        paths = dict()
-        for root, dirs, files in os.walk(src_dir):
-            paths[root] = files
+    dir_with_files = {
+        dir: sorted(files)
+        for dir, _, files in os.walk(src_dir)
+    }
 
-        for root in sorted(list(paths.keys())):
-            for file in sorted(paths[root]):
+    with zipfile.ZipFile(output_path, 'w') as archive:
+        for dir in sorted(dir_with_files.keys()):
+            for file in dir_with_files[dir]:
                 if file.endswith('.pyc'):
-                    break
+                    continue
                 metadata = zipfile.ZipInfo(
-                    os.path.join(root, file).replace(src_dir, '').lstrip(os.sep)
+                    os.path.join(
+                        'python' if is_layer else '',
+                        dir.replace(src_dir, '').lstrip(os.sep),
+                        file
+                    )
                 )
                 metadata.external_attr = 0o755 << 16
-                with open(os.path.join(root, file), 'rb') as f:
+                with open(os.path.join(dir, file), 'rb') as f:
                     data = f.read()
                 archive.writestr(
                     metadata,
@@ -76,5 +81,10 @@ if __name__ == '__main__':
     logging.basicConfig(level='DEBUG')
     query = json.loads(sys.stdin.read())
     logging.debug(query)
-    archive = build(query['src_dir'], query['output_path'], query['install_dependencies'])
+    archive = build(
+        query['src_dir'],
+        query['output_path'],
+        query['install_dependencies'] == 'true',
+        query['is_layer']  == 'true'
+    )
     print(json.dumps({'archive': archive, 'base64sha256':get_hash(archive)}))
