@@ -13,3 +13,9 @@ variable "install_dependencies" {
     type        = bool
     default     = true
 }
+
+variable "is_layer" {
+    description = "Generate an archive to be used as a layer"
+    type        = bool
+    default     = false
+}
