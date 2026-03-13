@@ -1,6 +1,4 @@
 
-from distutils.dir_util import copy_tree
-
 import base64
 import errno
 import hashlib
@@ -15,7 +13,7 @@ import zipfile
 
 def build(src_dir, output_path, install_dependencies):
     with tempfile.TemporaryDirectory() as build_dir:
-        copy_tree(src_dir, build_dir)
+        shutil.copytree(src_dir, build_dir, dirs_exist_ok=True)
         if os.path.exists(os.path.join(src_dir, 'requirements.txt')):
             subprocess.run(
                 [sys.executable,
